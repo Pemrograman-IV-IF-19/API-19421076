@@ -1,7 +1,24 @@
-const  router = require('express').Router()
+const router = require('express').Router()
 const barangController = require('../controller/barangController')
+
+const utilApp = require('../utils/utils_apps')
+const multer = require('multer')
+const uploadFile = multer({
+  storage: utilApp.uploadFile
+}).single("gambar")
+
 // Input
-router.post('/input-barang', (req, res) => {
+router.post('/input-barang', uploadFile, (req, res) => {
+    if(req.file == undefined){
+        res.json({
+            status: false,
+            msg: "File tidak boleh kosong"
+        })
+    } else {
+        Object.assign(req.body, {
+            gambar: req.file.filename
+        })
+    }
     barangController.inputBarang(req.body)
     .then((result) => {
         res.json(result)
@@ -10,8 +27,27 @@ router.post('/input-barang', (req, res) => {
     })
 })
 // Update
+// 1
 router.put('/update-barang/:id', (req, res) => {
     barangController.updateBarang(req.params.id, req.body)
+    .then((result) => {
+        res.json(result)
+    }).catch((err) => {
+        res.json(err)
+    })
+})
+// 2
+router.put('/update-gambar/:id', uploadFile, (req, res) => {
+    if(req.file == undefined){
+        res.json({
+            status: false,
+            msg: "File tidak boleh kosong"
+        })
+    } else {
+        Object.assign(req.body, {
+            gambar: req.file.filename
+        })
+    }barangController.updateBaranggambar(req.params.id, req.body.gambar)
     .then((result) => {
         res.json(result)
     }).catch((err) => {

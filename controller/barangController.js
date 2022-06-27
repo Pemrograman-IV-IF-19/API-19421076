@@ -17,12 +17,33 @@ new Promise(async (resolve, reject) => {
         })
     })
 })
-// update
+// update 
 exports.updateBarang = (id, data) => 
 new Promise(async (resolve, reject) => {
     barangModel.updateOne({
         _id: objectId(id)
     }, data)
+    .then(() => {
+        resolve({
+            status: true,
+            msg: "Berhasil Update Data"
+        })
+    }).catch((err) => {
+        reject({
+            status: false,
+            msg: "Terjadi Kesalahan Pada Server"
+        })
+    })
+})
+// gambar
+exports.updateBaranggambar = (id, gambar) => 
+new Promise(async (resolve, reject) => {
+    barangModel.updateOne({
+        _id: objectId(id)
+    },
+    {
+      $set: { gambar: gambar }
+    })
     .then(() => {
         resolve({
             status: true,
@@ -62,7 +83,18 @@ new Promise(async (resolve, reject) => {
 // get All Data Barang
 exports.getallBarang = () => 
 new Promise(async (resolve, reject) => {
-    barangModel.find({})
+    barangModel.aggregate([
+      {
+        $lookup:
+          {
+            from: "kategoris",
+            localField: "kategori",
+            foreignField: "_id",
+            as: "kategoriBarang"
+          }
+     },
+     { $unwind: "$kategoriBarang" }
+    ])
     .then((dataBarang) => {
         if (dataBarang.length > 0) {
             resolve({
@@ -86,9 +118,21 @@ new Promise(async (resolve, reject) => {
 // get by ID Barang
 exports.getBarangbyID = (id) => 
 new Promise(async (resolve, reject) => {
-    barangModel.findOne({
-        _id: objectId(id)
-    }).then((dataBarang) => {
+    barangModel.aggregate([
+      {
+        $match: { _id: objectId(id) }
+      },
+      {
+        $lookup:
+          {
+            from: "kategoris",
+            localField: "kategori",
+            foreignField: "_id",
+            as: "kategoriBarang"
+          }
+     },
+     { $unwind: "$kategoriBarang" }
+    ]).then((dataBarang) => {
         if (dataBarang) {
             resolve({
                 status: true,
